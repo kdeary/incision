@@ -43318,6 +43318,7 @@ class Scene {
 
 		if(!sceneSettings.canvas) document.body.appendChild(this.app.view);
 
+		// Tick event emitter
 		this.app.ticker.add(delta => {
 			this.currentDelta = delta;
 
@@ -43332,7 +43333,9 @@ class Scene {
 
 	addTexture(textureName, texturePath) {
 		return new Promise(resolve => {
+			// Load in the texture
 			this.app.loader.add(textureName, texturePath).load((loader, resources) => {
+				// Then create the costume and let all sprites know that it's loaded in.
 				let costume = new Costume(resources[textureName]);
 				this.resources[costume.name] = costume;
 
@@ -43348,7 +43351,9 @@ class Scene {
 	}
 
 	dispatchEvent(eventID, data=null) {
+		// Find all scripts with the given eventID
 		(this.scripts[eventID] || []).forEach(script => {
+			// Then only run them if their conditional is true
 			if(script.condition(data, this, this.sprites[script.spriteID])) {
 				script.func(this, this.sprites[script.spriteID]);
 			}

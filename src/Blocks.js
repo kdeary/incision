@@ -1,4 +1,4 @@
-module.exports = scene => {
+module.exports = (scene, sprite) => {
 	return {
 		...(require('./Blocks/Control')(scene))
 	};

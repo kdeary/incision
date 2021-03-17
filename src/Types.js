@@ -1,6 +1,14 @@
+let EventID = require('./Types/EventID');
+
 let Types = {
-	EVENTS: {
-		START: 1
+	Events: {
+		Start: EventID(1)
+	},
+	Options: {
+		EventID: require('./Types/EventID'),
+		EventFilterOptions: require('./Types/EventFilterOptions'),
+		SpriteScriptOptions: require('./Types/SpriteScriptOptions'),
+		ScriptEventHandlerObject: require('./Types/ScriptEventHandlerObject')
 	}
 };
 

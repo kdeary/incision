@@ -7,16 +7,16 @@ scene.addTexture("behbble", "behbble.png").then(costume => {
 
 let behbble = scene.createSprite({
 	name: "behbble",
-	costume: "behbble"
+	costumes: ["behbble"]
 });
 
 behbble.attach({
-	type: Incision.Types.EVENTS.START,
+	type: Incision.Types.Events.Start,
 	condition: (data, scene, sprite) => true
 }, scene => {
-	Blocks.forever(async () => {
+	behbble.forever(async () => {
 		behbble.x += 10;
 		behbble.y += 10;
-		await Blocks.wait(1000);
+		await behbble.wait(1000);
 	});
 });

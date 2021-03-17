@@ -43240,7 +43240,7 @@ exports.middleware = index;
 
 
 },{"mini-signals":49,"parse-uri":51}],55:[function(require,module,exports){
-module.exports = scene => {
+module.exports = (scene, sprite) => {
 	return {
 		...(require('./Blocks/Control')(scene))
 	};
@@ -43296,7 +43296,6 @@ const PIXI = require('pixi.js');
 const EventEmitter = require('eventemitter3');
 const Sprite = require('./Sprite');
 const Costume = require('./Costume');
-const Blocks = require('./Blocks');
 const Types = require('./Types');
 
 class Scene {
@@ -43310,7 +43309,6 @@ class Scene {
 		this.resources = {};
 		this.sceneEvents = new EventEmitter();
 		this.currentDelta = 0;
-		this.Blocks = Blocks(this);
 
 		this.scripts = {};
 
@@ -43326,11 +43324,23 @@ class Scene {
 		});
 	}
 
+	/**
+	 * Starts the scene. If successful, the function returns true.
+	 * @return {Boolean}
+	 */
 	start() {
 		this.started = true;
-		this.dispatchEvent(Types.EVENTS.START);
+		this.dispatchEvent(Types.Events.Start);
+
+		return true;
 	}
 
+	/**
+	 * Adds one texture to the scene.
+	 * @param  {String}  textureName The name of the texture. Used to retrieve the texture later. 
+	 * @param  {String}  texturePath The path to the texture.
+	 * @return {Promise} Promise that resolves with the Costume when the texture finishes loading.
+	 */
 	addTexture(textureName, texturePath) {
 		return new Promise(resolve => {
 			// Load in the texture
@@ -43346,28 +43356,54 @@ class Scene {
 		});
 	}
 
+	/**
+	 * Adds multiple textures to the scene.
+	 * @param  {Array}   textures An array of multiple texture names & paths: [{name: String, path: String}]
+	 * @return {Promise} Promise that resolves with an array costumes when the texture finishes loading.
+	 */
 	addTextures(textures) {
 		return Promise.all(textures.map(t => this.addTexture(t.name, t.path)));
 	}
 
+	/**
+	 * @param  {EventID}  eventID The ID of the event to dispatch.
+	 * @param  {Object}   data    Data associated with the event. Useful for the conditional to filter certain events.
+	 * @return {Array}    Array of the scripts that ran.
+	 */
 	dispatchEvent(eventID, data=null) {
+		let ranScripts = [];
 		// Find all scripts with the given eventID
 		(this.scripts[eventID] || []).forEach(script => {
 			// Then only run them if their conditional is true
 			if(script.condition(data, this, this.sprites[script.spriteID])) {
 				script.func(this, this.sprites[script.spriteID]);
+				ranScripts.push(script);
 			}
 		});
+
+		return ranScripts;
 	}
 
+	/**
+	 * Attaches a script to the scene that gets called whenever the event dispatched.
+	 * @param  {EventFilterObject}   event  An object that holds the type of event the script should be dispatched for.
+	 * @param  {SpriteScriptObject}  script 
+	 * @return {ScriptEventHandlerObject} The created script handler object
+	 */
 	attachScript(event, script) {
-		let scriptHandler = createScriptHandlerObject(event, script);
+		let scriptHandler = Types.Options.ScriptEventHandlerObject(event, script);
 
 		if(this.scripts[event.type]) {
 			this.scripts[event.type].push(scriptHandler);
 		} else this.scripts[event.type] = [scriptHandler];
+
+		return scriptHandler;
 	}
 
+	/**
+	 * @param  {SpriteSettings} spriteSettings The sprite's settings
+	 * @return {Sprite}
+	 */
 	createSprite(spriteSettings) {
 		let sprite = new Sprite(this, spriteSettings);
 
@@ -43377,24 +43413,25 @@ class Scene {
 	}
 }
 
-function createScriptHandlerObject(event, script) {
-	return {id: script.id, spriteID: script.spriteID, condition: event.condition, func: script.func};
-}
-
 module.exports = Scene;
-},{"./Blocks":55,"./Costume":57,"./Sprite":60,"./Types":61,"eventemitter3":46,"pixi.js":52}],60:[function(require,module,exports){
+},{"./Costume":57,"./Sprite":60,"./Types":61,"eventemitter3":46,"pixi.js":52}],60:[function(require,module,exports){
 const PIXI = require('pixi.js');
 const Utils = require('./Utils');
+const Blocks = require('./Blocks');
+const SpriteScriptOptions = require('./Types/SpriteScriptOptions');
+const SpriteSettings = require('./Types/SpriteSettings');
 
 class Sprite {
-	constructor(scene, settings) {
+	constructor(scene, rawSettings) {
+		let settings = SpriteSettings(rawSettings);
+
 		this.scene = scene;
 		this.name = settings.name || "Sprite" + String(Date.now()).slice(-3);
-		this.costumes = settings.costume ? [settings.costume] : [];
+		this.costumes = settings.costumes;
 		this.selectedCostume = 0;
 		this.scriptCount = 0;
 
-		Object.assign(this, settings);
+		Object.assign(this, settings, Blocks(this.scene, this));
 
 		this.pixiSprite = null;
 
@@ -43412,12 +43449,6 @@ class Sprite {
 		this.createPIXISprite();
 	}
 
-	get x() {return this.pixiSprite.x}
-	set x(x) {this.pixiSprite.x = x;}
-
-	get y() {return this.pixiSprite.y}
-	set y(y) {this.pixiSprite.y = y;}
-
 	createPIXISprite() {
 		this.pixiSprite = new PIXI.Sprite();
 		scene.app.stage.addChild(this.pixiSprite);
@@ -43429,27 +43460,95 @@ class Sprite {
 		this.scriptCount++;
 		let scriptID = this.name + this.scriptCount;
 
-		this.scene.attachScript(event, {
+		this.scene.attachScript(event, SpriteScriptOptions({
 			id: scriptID,
 			func: scriptFunc,
 			spriteID: this.name
-		});
+		}));
 
 		return scriptID; 
 	}
+
+	get x() {return this.pixiSprite.x}
+	set x(x) {this.pixiSprite.x = x;}
+
+	get y() {return this.pixiSprite.y}
+	set y(y) {this.pixiSprite.y = y;}
 }
 
 
 module.exports = Sprite;
-},{"./Utils":62,"pixi.js":52}],61:[function(require,module,exports){
+},{"./Blocks":55,"./Types/SpriteScriptOptions":65,"./Types/SpriteSettings":66,"./Utils":67,"pixi.js":52}],61:[function(require,module,exports){
+let EventID = require('./Types/EventID');
+
 let Types = {
-	EVENTS: {
-		START: 1
+	Events: {
+		Start: EventID(1)
+	},
+	Options: {
+		EventID: require('./Types/EventID'),
+		EventFilterOptions: require('./Types/EventFilterOptions'),
+		SpriteScriptOptions: require('./Types/SpriteScriptOptions'),
+		ScriptEventHandlerObject: require('./Types/ScriptEventHandlerObject')
 	}
 };
 
 module.exports = Types;
-},{}],62:[function(require,module,exports){
+},{"./Types/EventFilterOptions":62,"./Types/EventID":63,"./Types/ScriptEventHandlerObject":64,"./Types/SpriteScriptOptions":65}],62:[function(require,module,exports){
+function EventFilterOptions({
+	type,
+	conditional
+}) {
+	return {
+		type,
+		conditional
+	};
+}
+
+module.exports = EventFilterOptions;
+},{}],63:[function(require,module,exports){
+function EventID({
+	type
+}) {
+	return type;
+}
+
+module.exports = EventID;
+},{}],64:[function(require,module,exports){
+function ScriptEventHandlerObject(eventFilter, spriteScript) {
+	return {
+		id: spriteScript.id,
+		spriteID: spriteScript.spriteID,
+		condition: eventFilter.condition,
+		func: spriteScript.func
+	};
+}
+
+module.exports = ScriptEventHandlerObject;
+},{}],65:[function(require,module,exports){
+function SpriteScriptOptions({
+	id,
+	func,
+	spriteID
+}) {
+	return {
+		id,
+		func,
+		spriteID
+	};
+}
+
+module.exports = SpriteScriptOptions;
+},{}],66:[function(require,module,exports){
+function SpriteSettings(settings) {
+	return {
+		name: settings.name,
+		costumes: settings.costumes
+	};
+}
+
+module.exports = SpriteSettings;
+},{}],67:[function(require,module,exports){
 let Utils = {};
 
 Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
@@ -43462,9 +43561,9 @@ Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
 });
 
 module.exports = Utils;
-},{}],63:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 const Incision = require('./Incision');
 
 module.exports = Incision;
-},{"./Incision":58}]},{},[63])(63)
+},{"./Incision":58}]},{},[68])(68)
 });

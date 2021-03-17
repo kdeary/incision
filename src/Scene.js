@@ -2,7 +2,6 @@ const PIXI = require('pixi.js');
 const EventEmitter = require('eventemitter3');
 const Sprite = require('./Sprite');
 const Costume = require('./Costume');
-const Blocks = require('./Blocks');
 const Types = require('./Types');
 
 class Scene {
@@ -16,7 +15,6 @@ class Scene {
 		this.resources = {};
 		this.sceneEvents = new EventEmitter();
 		this.currentDelta = 0;
-		this.Blocks = Blocks(this);
 
 		this.scripts = {};
 
@@ -32,11 +30,23 @@ class Scene {
 		});
 	}
 
+	/**
+	 * Starts the scene. If successful, the function returns true.
+	 * @return {Boolean}
+	 */
 	start() {
 		this.started = true;
-		this.dispatchEvent(Types.EVENTS.START);
+		this.dispatchEvent(Types.Events.Start);
+
+		return true;
 	}
 
+	/**
+	 * Adds one texture to the scene.
+	 * @param  {String}  textureName The name of the texture. Used to retrieve the texture later. 
+	 * @param  {String}  texturePath The path to the texture.
+	 * @return {Promise} Promise that resolves with the Costume when the texture finishes loading.
+	 */
 	addTexture(textureName, texturePath) {
 		return new Promise(resolve => {
 			// Load in the texture
@@ -52,28 +62,54 @@ class Scene {
 		});
 	}
 
+	/**
+	 * Adds multiple textures to the scene.
+	 * @param  {Array}   textures An array of multiple texture names & paths: [{name: String, path: String}]
+	 * @return {Promise} Promise that resolves with an array costumes when the texture finishes loading.
+	 */
 	addTextures(textures) {
 		return Promise.all(textures.map(t => this.addTexture(t.name, t.path)));
 	}
 
+	/**
+	 * @param  {EventID}  eventID The ID of the event to dispatch.
+	 * @param  {Object}   data    Data associated with the event. Useful for the conditional to filter certain events.
+	 * @return {Array}    Array of the scripts that ran.
+	 */
 	dispatchEvent(eventID, data=null) {
+		let ranScripts = [];
 		// Find all scripts with the given eventID
 		(this.scripts[eventID] || []).forEach(script => {
 			// Then only run them if their conditional is true
 			if(script.condition(data, this, this.sprites[script.spriteID])) {
 				script.func(this, this.sprites[script.spriteID]);
+				ranScripts.push(script);
 			}
 		});
+
+		return ranScripts;
 	}
 
+	/**
+	 * Attaches a script to the scene that gets called whenever the event dispatched.
+	 * @param  {EventFilterObject}   event  An object that holds the type of event the script should be dispatched for.
+	 * @param  {SpriteScriptObject}  script 
+	 * @return {ScriptEventHandlerObject} The created script handler object
+	 */
 	attachScript(event, script) {
-		let scriptHandler = createScriptHandlerObject(event, script);
+		let scriptHandler = Types.Options.ScriptEventHandlerObject(event, script);
 
 		if(this.scripts[event.type]) {
 			this.scripts[event.type].push(scriptHandler);
 		} else this.scripts[event.type] = [scriptHandler];
+
+		return scriptHandler;
 	}
 
+	/**
+	 * @param  {SpriteSettings} spriteSettings The sprite's settings
+	 * @return {Sprite}
+	 */
 	createSprite(spriteSettings) {
 		let sprite = new Sprite(this, spriteSettings);
 
@@ -81,10 +117,6 @@ class Scene {
 
 		return sprite;
 	}
-}
-
-function createScriptHandlerObject(event, script) {
-	return {id: script.id, spriteID: script.spriteID, condition: event.condition, func: script.func};
 }
 
 module.exports = Scene;

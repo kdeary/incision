@@ -1,15 +1,20 @@
 const PIXI = require('pixi.js');
 const Utils = require('./Utils');
+const Blocks = require('./Blocks');
+const SpriteScriptOptions = require('./Types/SpriteScriptOptions');
+const SpriteSettings = require('./Types/SpriteSettings');
 
 class Sprite {
-	constructor(scene, settings) {
+	constructor(scene, rawSettings) {
+		let settings = SpriteSettings(rawSettings);
+
 		this.scene = scene;
 		this.name = settings.name || "Sprite" + String(Date.now()).slice(-3);
-		this.costumes = settings.costume ? [settings.costume] : [];
+		this.costumes = settings.costumes;
 		this.selectedCostume = 0;
 		this.scriptCount = 0;
 
-		Object.assign(this, settings);
+		Object.assign(this, settings, Blocks(this.scene, this));
 
 		this.pixiSprite = null;
 
@@ -27,12 +32,6 @@ class Sprite {
 		this.createPIXISprite();
 	}
 
-	get x() {return this.pixiSprite.x}
-	set x(x) {this.pixiSprite.x = x;}
-
-	get y() {return this.pixiSprite.y}
-	set y(y) {this.pixiSprite.y = y;}
-
 	createPIXISprite() {
 		this.pixiSprite = new PIXI.Sprite();
 		scene.app.stage.addChild(this.pixiSprite);
@@ -44,14 +43,20 @@ class Sprite {
 		this.scriptCount++;
 		let scriptID = this.name + this.scriptCount;
 
-		this.scene.attachScript(event, {
+		this.scene.attachScript(event, SpriteScriptOptions({
 			id: scriptID,
 			func: scriptFunc,
 			spriteID: this.name
-		});
+		}));
 
 		return scriptID; 
 	}
+
+	get x() {return this.pixiSprite.x}
+	set x(x) {this.pixiSprite.x = x;}
+
+	get y() {return this.pixiSprite.y}
+	set y(y) {this.pixiSprite.y = y;}
 }
 
 

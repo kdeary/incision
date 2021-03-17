@@ -43282,25 +43282,22 @@ const Scene = require('./Scene');
 const Sprite = require('./Sprite');
 const Costume = require('./Costume');
 const Types = require('./Types');
-const ScriptEvent = require('./ScriptEvent');
 
 const Incision = {
 	Scene,
 	Sprite,
 	Costume,
-	Types,
-	ScriptEvent
+	Types
 };
 
 module.exports = Incision;
-},{"./Costume":57,"./Scene":59,"./ScriptEvent":60,"./Sprite":61,"./Types":62}],59:[function(require,module,exports){
+},{"./Costume":57,"./Scene":59,"./Sprite":60,"./Types":61}],59:[function(require,module,exports){
 const PIXI = require('pixi.js');
 const EventEmitter = require('eventemitter3');
 const Sprite = require('./Sprite');
 const Costume = require('./Costume');
 const Blocks = require('./Blocks');
 const Types = require('./Types');
-const ScriptEvent = require('./ScriptEvent');
 
 class Scene {
 	constructor(sceneSettings={}) {
@@ -43380,18 +43377,7 @@ function createScriptHandlerObject(event, script) {
 }
 
 module.exports = Scene;
-},{"./Blocks":55,"./Costume":57,"./ScriptEvent":60,"./Sprite":61,"./Types":62,"eventemitter3":46,"pixi.js":52}],60:[function(require,module,exports){
-function ScriptEvent(event) {
-	let self = {
-		type: event.type || 0,
-		condition: event.data || (() => true)
-	};
-
-	return self;
-}
-
-module.exports = ScriptEvent;
-},{}],61:[function(require,module,exports){
+},{"./Blocks":55,"./Costume":57,"./Sprite":60,"./Types":61,"eventemitter3":46,"pixi.js":52}],60:[function(require,module,exports){
 const PIXI = require('pixi.js');
 const Utils = require('./Utils');
 
@@ -43421,6 +43407,12 @@ class Sprite {
 		this.createPIXISprite();
 	}
 
+	get x() {return this.pixiSprite.x}
+	set x(x) {this.pixiSprite.x = x;}
+
+	get y() {return this.pixiSprite.y}
+	set y(y) {this.pixiSprite.y = y;}
+
 	createPIXISprite() {
 		this.pixiSprite = new PIXI.Sprite();
 		scene.app.stage.addChild(this.pixiSprite);
@@ -43444,7 +43436,7 @@ class Sprite {
 
 
 module.exports = Sprite;
-},{"./Utils":63,"pixi.js":52}],62:[function(require,module,exports){
+},{"./Utils":62,"pixi.js":52}],61:[function(require,module,exports){
 let Types = {
 	EVENTS: {
 		START: 1
@@ -43452,7 +43444,7 @@ let Types = {
 };
 
 module.exports = Types;
-},{}],63:[function(require,module,exports){
+},{}],62:[function(require,module,exports){
 let Utils = {};
 
 Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
@@ -43465,9 +43457,9 @@ Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
 });
 
 module.exports = Utils;
-},{}],64:[function(require,module,exports){
+},{}],63:[function(require,module,exports){
 const Incision = require('./Incision');
 
 module.exports = Incision;
-},{"./Incision":58}]},{},[64])(64)
+},{"./Incision":58}]},{},[63])(63)
 });

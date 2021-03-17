@@ -10,13 +10,13 @@ let behbble = scene.createSprite({
 	costume: "behbble"
 });
 
-behbble.attach(Incision.ScriptEvent({
+behbble.attach({
 	type: Incision.Types.EVENTS.START,
 	condition: (data, scene, sprite) => true
-}), scene => {
+}, scene => {
 	Blocks.forever(async () => {
-		behbble.pixiSprite.x += 10;
-		behbble.pixiSprite.y += 10;
+		behbble.x += 10;
+		behbble.y += 10;
 		await Blocks.wait(1000);
 	});
 });

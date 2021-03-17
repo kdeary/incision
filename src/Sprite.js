@@ -27,6 +27,12 @@ class Sprite {
 		this.createPIXISprite();
 	}
 
+	get x() {return this.pixiSprite.x}
+	set x(x) {this.pixiSprite.x = x;}
+
+	get y() {return this.pixiSprite.y}
+	set y(y) {this.pixiSprite.y = y;}
+
 	createPIXISprite() {
 		this.pixiSprite = new PIXI.Sprite();
 		scene.app.stage.addChild(this.pixiSprite);

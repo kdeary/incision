@@ -4,7 +4,6 @@ const Sprite = require('./Sprite');
 const Costume = require('./Costume');
 const Blocks = require('./Blocks');
 const Types = require('./Types');
-const ScriptEvent = require('./ScriptEvent');
 
 class Scene {
 	constructor(sceneSettings={}) {

@@ -30,6 +30,9 @@ class Scene {
 		});
 	}
 
+	get width() {return this.app.renderer.width}
+	get height() {return this.app.renderer.height}
+
 	/**
 	 * Starts the scene. If successful, the function returns true.
 	 * @return {Boolean}

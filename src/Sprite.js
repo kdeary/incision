@@ -52,11 +52,14 @@ class Sprite {
 		return scriptID; 
 	}
 
-	get x() {return this.pixiSprite.x}
+	get x() {return this.pixiSprite.x;}
 	set x(x) {this.pixiSprite.x = x;}
 
-	get y() {return this.pixiSprite.y}
+	get y() {return this.pixiSprite.y;}
 	set y(y) {this.pixiSprite.y = y;}
+
+	get direction() {return this.pixiSprite.rotation * PIXI.RAD_TO_DEG;}
+	set direction(degrees) {this.pixiSprite.rotation = PIXI.DEG_TO_RAD * degrees;}
 }
 
 

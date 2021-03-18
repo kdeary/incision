@@ -43242,11 +43242,12 @@ exports.middleware = index;
 },{"mini-signals":49,"parse-uri":51}],55:[function(require,module,exports){
 module.exports = (scene, sprite) => {
 	return {
+		...(require('./Blocks/Motion')(scene)),
 		...(require('./Blocks/Control')(scene))
 	};
 };
-},{"./Blocks/Control":56}],56:[function(require,module,exports){
-module.exports = scene => {
+},{"./Blocks/Control":56,"./Blocks/Motion":57}],56:[function(require,module,exports){
+module.exports = (scene, sprite) => {
 	let ControlBlocks = {};
 
 	ControlBlocks.wait = (ms) => {
@@ -43262,11 +43263,70 @@ module.exports = scene => {
 				canCall = true;
 			}
 		});
+
+		return sprite;
 	};
 
 	return ControlBlocks;
 };
 },{}],57:[function(require,module,exports){
+const PIXI = require('pixi.js');
+const Types = require('../Types');
+
+module.exports = (scene, sprite) => {
+	let MotionBlocks = {};
+
+	MotionBlocks.moveSteps = steps => {
+		sprite.x += Math.cos(sprite.direction * PIXI.DEG_TO_RAD) * steps;
+		sprite.y += Math.sin(sprite.direction * PIXI.DEG_TO_RAD) * steps;
+		return sprite;
+	};
+
+	MotionBlocks.turnDegrees = degrees => {
+		sprite.direction += degrees;
+		return sprite;
+	};
+
+	MotionBlocks.goTo = place => {
+		let position = generatePosition(place);
+		if(!position) return sprite;
+		sprite.goToXY(position.x, position.y);
+
+		return sprite;
+	};
+
+	MotionBlocks.goToXY = (x, y) => {
+		sprite.x = x;
+		sprite.y = y;
+
+		return sprite;
+	};
+
+	return MotionBlocks;
+};
+
+function generatePosition(place) {
+	if(!place) return null;
+
+	if(place === Types.Positions.RandomPosition) {
+		return {
+			x: Math.floor(Math.random() * scene.width),
+			y: Math.floor(Math.random() * scene.height)
+		};
+	} else if(place === Types.Positions.Mouse) {
+		return {
+			x: Math.floor(Math.random() * scene.width),
+			y: Math.floor(Math.random() * scene.height)
+		};
+	} else if(place.constructor.name === "Sprite"){
+		return {x: place.x, y: place.y};
+	} else if(scene.sprites[place]){
+		return {x: scene.sprites[place].x, y: scene.sprites[place].y};
+	}
+
+	return null;
+}
+},{"../Types":62,"pixi.js":52}],58:[function(require,module,exports){
 class Costume {
 	constructor(resource) {
 		this.resource = resource;
@@ -43277,7 +43337,7 @@ class Costume {
 }
 
 module.exports = Costume;
-},{}],58:[function(require,module,exports){
+},{}],59:[function(require,module,exports){
 const Scene = require('./Scene');
 const Sprite = require('./Sprite');
 const Costume = require('./Costume');
@@ -43291,7 +43351,7 @@ const Incision = {
 };
 
 module.exports = Incision;
-},{"./Costume":57,"./Scene":59,"./Sprite":60,"./Types":61}],59:[function(require,module,exports){
+},{"./Costume":58,"./Scene":60,"./Sprite":61,"./Types":62}],60:[function(require,module,exports){
 const PIXI = require('pixi.js');
 const EventEmitter = require('eventemitter3');
 const Sprite = require('./Sprite');
@@ -43323,6 +43383,9 @@ class Scene {
 			if(this.started) this.sceneEvents.emit('tick', this);
 		});
 	}
+
+	get width() {return this.app.renderer.width}
+	get height() {return this.app.renderer.height}
 
 	/**
 	 * Starts the scene. If successful, the function returns true.
@@ -43414,7 +43477,7 @@ class Scene {
 }
 
 module.exports = Scene;
-},{"./Costume":57,"./Sprite":60,"./Types":61,"eventemitter3":46,"pixi.js":52}],60:[function(require,module,exports){
+},{"./Costume":58,"./Sprite":61,"./Types":62,"eventemitter3":46,"pixi.js":52}],61:[function(require,module,exports){
 const PIXI = require('pixi.js');
 const Utils = require('./Utils');
 const Blocks = require('./Blocks');
@@ -43469,19 +43532,26 @@ class Sprite {
 		return scriptID; 
 	}
 
-	get x() {return this.pixiSprite.x}
+	get x() {return this.pixiSprite.x;}
 	set x(x) {this.pixiSprite.x = x;}
 
-	get y() {return this.pixiSprite.y}
+	get y() {return this.pixiSprite.y;}
 	set y(y) {this.pixiSprite.y = y;}
+
+	get direction() {return this.pixiSprite.rotation * PIXI.RAD_TO_DEG;}
+	set direction(degrees) {this.pixiSprite.rotation = PIXI.DEG_TO_RAD * degrees;}
 }
 
 
 module.exports = Sprite;
-},{"./Blocks":55,"./Types/SpriteScriptOptions":65,"./Types/SpriteSettings":66,"./Utils":67,"pixi.js":52}],61:[function(require,module,exports){
+},{"./Blocks":55,"./Types/SpriteScriptOptions":66,"./Types/SpriteSettings":67,"./Utils":68,"pixi.js":52}],62:[function(require,module,exports){
 let EventID = require('./Types/EventID');
 
 let Types = {
+	Positions: {
+		Random: "random_position",
+		Mouse: "mouse_position"
+	},
 	Events: {
 		Start: EventID(1)
 	},
@@ -43494,7 +43564,7 @@ let Types = {
 };
 
 module.exports = Types;
-},{"./Types/EventFilterOptions":62,"./Types/EventID":63,"./Types/ScriptEventHandlerObject":64,"./Types/SpriteScriptOptions":65}],62:[function(require,module,exports){
+},{"./Types/EventFilterOptions":63,"./Types/EventID":64,"./Types/ScriptEventHandlerObject":65,"./Types/SpriteScriptOptions":66}],63:[function(require,module,exports){
 function EventFilterOptions({
 	type,
 	conditional
@@ -43506,7 +43576,7 @@ function EventFilterOptions({
 }
 
 module.exports = EventFilterOptions;
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 function EventID({
 	type
 }) {
@@ -43514,7 +43584,7 @@ function EventID({
 }
 
 module.exports = EventID;
-},{}],64:[function(require,module,exports){
+},{}],65:[function(require,module,exports){
 function ScriptEventHandlerObject(eventFilter, spriteScript) {
 	return {
 		id: spriteScript.id,
@@ -43525,7 +43595,7 @@ function ScriptEventHandlerObject(eventFilter, spriteScript) {
 }
 
 module.exports = ScriptEventHandlerObject;
-},{}],65:[function(require,module,exports){
+},{}],66:[function(require,module,exports){
 function SpriteScriptOptions({
 	id,
 	func,
@@ -43539,7 +43609,7 @@ function SpriteScriptOptions({
 }
 
 module.exports = SpriteScriptOptions;
-},{}],66:[function(require,module,exports){
+},{}],67:[function(require,module,exports){
 function SpriteSettings(settings) {
 	return {
 		name: settings.name,
@@ -43548,7 +43618,7 @@ function SpriteSettings(settings) {
 }
 
 module.exports = SpriteSettings;
-},{}],67:[function(require,module,exports){
+},{}],68:[function(require,module,exports){
 let Utils = {};
 
 Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
@@ -43561,9 +43631,9 @@ Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
 });
 
 module.exports = Utils;
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 const Incision = require('./Incision');
 
 module.exports = Incision;
-},{"./Incision":58}]},{},[68])(68)
+},{"./Incision":59}]},{},[69])(69)
 });

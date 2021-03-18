@@ -1,6 +1,10 @@
 let EventID = require('./Types/EventID');
 
 let Types = {
+	Positions: {
+		Random: "random_position",
+		Mouse: "mouse_position"
+	},
 	Events: {
 		Start: EventID(1)
 	},

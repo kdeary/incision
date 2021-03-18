@@ -1,4 +1,4 @@
-module.exports = scene => {
+module.exports = (scene, sprite) => {
 	let ControlBlocks = {};
 
 	ControlBlocks.wait = (ms) => {
@@ -14,6 +14,8 @@ module.exports = scene => {
 				canCall = true;
 			}
 		});
+
+		return sprite;
 	};
 
 	return ControlBlocks;

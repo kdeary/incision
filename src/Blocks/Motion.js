@@ -31,13 +31,11 @@ module.exports = (scene, sprite) => {
 		return sprite;
 	};
 
-	MotionBlocks.glideTo = (place, ms) => {
+	MotionBlocks.glideTo = async (place, ms) => {
 		let position = generatePosition(place);
 		if(!position) return sprite;
 
-
-
-		sprite.goToXY(position.x, position.y);
+		await sprite.glideToXY(position.x, position.y, ms);
 
 		return sprite;
 	};
@@ -62,27 +60,27 @@ module.exports = (scene, sprite) => {
 		return sprite;
 	};
 
-	return MotionBlocks;
-};
+	function generatePosition(place) {
+		if(!place) return null;
 
-function generatePosition(place) {
-	if(!place) return null;
+		if(place === Types.Positions.Random) {
+			return {
+				x: Utils.randomInt(-scene.width / 2, scene.width / 2),
+				y: Utils.randomInt(-scene.height / 2, scene.height / 2)
+			};
+		} else if(place === Types.Positions.Mouse) {
+			return {
+				x: Utils.randomInt(-scene.width / 2, scene.width / 2),
+				y: Utils.randomInt(-scene.height / 2, scene.height / 2)
+			};
+		} else if(place.constructor.name === "Sprite"){
+			return {x: place.x, y: place.y};
+		} else if(scene.sprites[place]){
+			return {x: scene.sprites[place].x, y: scene.sprites[place].y};
+		}
 
-	if(place === Types.Positions.RandomPosition) {
-		return {
-			x: Math.floor(Math.random() * scene.width),
-			y: Math.floor(Math.random() * scene.height)
-		};
-	} else if(place === Types.Positions.Mouse) {
-		return {
-			x: Math.floor(Math.random() * scene.width),
-			y: Math.floor(Math.random() * scene.height)
-		};
-	} else if(place.constructor.name === "Sprite"){
-		return {x: place.x, y: place.y};
-	} else if(scene.sprites[place]){
-		return {x: scene.sprites[place].x, y: scene.sprites[place].y};
+		return null;
 	}
 
-	return null;
-}
+	return MotionBlocks;
+};

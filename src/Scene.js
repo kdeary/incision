@@ -21,8 +21,10 @@ class Scene {
 		this.started = false;
 
 		if(!sceneSettings.canvas) document.body.appendChild(this.app.view);
-
 		if(sceneSettings.fps) this.app.ticker.maxFPS = sceneSettings.fps;
+
+		this.app.stage.position.y = this.app.renderer.height / this.app.renderer.resolution;
+		this.app.stage.scale.y = -1;
 
 		// Tick event emitter
 		this.app.ticker.add(delta => {
@@ -59,6 +61,7 @@ class Scene {
 			// Load in the texture
 			this.app.loader.add(textureName, texturePath).load((loader, resources) => {
 				// Then create the costume and let all sprites know that it's loaded in.
+				resources[textureName].texture.rotate = 8;
 				let costume = new Costume(resources[textureName]);
 				this.resources[costume.name] = costume;
 

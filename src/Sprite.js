@@ -34,6 +34,10 @@ class Sprite {
 
 	createPIXISprite() {
 		this.pixiSprite = new PIXI.Sprite();
+
+		this.pixiSprite.anchor.x = 0.5;
+		this.pixiSprite.anchor.y = 0.5;
+
 		scene.app.stage.addChild(this.pixiSprite);
 	}
 

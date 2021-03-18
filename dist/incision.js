@@ -43303,13 +43303,11 @@ module.exports = (scene, sprite) => {
 		return sprite;
 	};
 
-	MotionBlocks.glideTo = (place, ms) => {
+	MotionBlocks.glideTo = async (place, ms) => {
 		let position = generatePosition(place);
 		if(!position) return sprite;
 
-
-
-		sprite.goToXY(position.x, position.y);
+		await sprite.glideToXY(position.x, position.y, ms);
 
 		return sprite;
 	};
@@ -43334,30 +43332,30 @@ module.exports = (scene, sprite) => {
 		return sprite;
 	};
 
-	return MotionBlocks;
-};
+	function generatePosition(place) {
+		if(!place) return null;
 
-function generatePosition(place) {
-	if(!place) return null;
+		if(place === Types.Positions.Random) {
+			return {
+				x: Utils.randomInt(-scene.width / 2, scene.width / 2),
+				y: Utils.randomInt(-scene.height / 2, scene.height / 2)
+			};
+		} else if(place === Types.Positions.Mouse) {
+			return {
+				x: Utils.randomInt(-scene.width / 2, scene.width / 2),
+				y: Utils.randomInt(-scene.height / 2, scene.height / 2)
+			};
+		} else if(place.constructor.name === "Sprite"){
+			return {x: place.x, y: place.y};
+		} else if(scene.sprites[place]){
+			return {x: scene.sprites[place].x, y: scene.sprites[place].y};
+		}
 
-	if(place === Types.Positions.RandomPosition) {
-		return {
-			x: Math.floor(Math.random() * scene.width),
-			y: Math.floor(Math.random() * scene.height)
-		};
-	} else if(place === Types.Positions.Mouse) {
-		return {
-			x: Math.floor(Math.random() * scene.width),
-			y: Math.floor(Math.random() * scene.height)
-		};
-	} else if(place.constructor.name === "Sprite"){
-		return {x: place.x, y: place.y};
-	} else if(scene.sprites[place]){
-		return {x: scene.sprites[place].x, y: scene.sprites[place].y};
+		return null;
 	}
 
-	return null;
-}
+	return MotionBlocks;
+};
 },{"../Types":62,"../Utils":68,"pixi.js":52}],58:[function(require,module,exports){
 class Costume {
 	constructor(resource) {
@@ -43407,8 +43405,10 @@ class Scene {
 		this.started = false;
 
 		if(!sceneSettings.canvas) document.body.appendChild(this.app.view);
-
 		if(sceneSettings.fps) this.app.ticker.maxFPS = sceneSettings.fps;
+
+		this.app.stage.position.y = this.app.renderer.height / this.app.renderer.resolution;
+		this.app.stage.scale.y = -1;
 
 		// Tick event emitter
 		this.app.ticker.add(delta => {
@@ -43445,6 +43445,7 @@ class Scene {
 			// Load in the texture
 			this.app.loader.add(textureName, texturePath).load((loader, resources) => {
 				// Then create the costume and let all sprites know that it's loaded in.
+				resources[textureName].texture.rotate = 8;
 				let costume = new Costume(resources[textureName]);
 				this.resources[costume.name] = costume;
 
@@ -43550,6 +43551,10 @@ class Sprite {
 
 	createPIXISprite() {
 		this.pixiSprite = new PIXI.Sprite();
+
+		this.pixiSprite.anchor.x = 0.5;
+		this.pixiSprite.anchor.y = 0.5;
+
 		scene.app.stage.addChild(this.pixiSprite);
 	}
 
@@ -43667,6 +43672,12 @@ Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
 });
 
 Utils.wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+Utils.randomInt = (min, max) => {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+}
 
 module.exports = Utils;
 },{}],69:[function(require,module,exports){

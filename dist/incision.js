@@ -43242,7 +43242,7 @@ exports.middleware = index;
 },{"mini-signals":49,"parse-uri":51}],55:[function(require,module,exports){
 module.exports = (scene, sprite) => {
 	return {
-		...(require('./Blocks/Motion')(scene)),
+		...(require('./Blocks/Motion')(scene, sprite)),
 		...(require('./Blocks/Control')(scene))
 	};
 };
@@ -43272,6 +43272,7 @@ module.exports = (scene, sprite) => {
 },{}],57:[function(require,module,exports){
 const PIXI = require('pixi.js');
 const Types = require('../Types');
+const Utils = require('../Utils');
 
 module.exports = (scene, sprite) => {
 	let MotionBlocks = {};
@@ -43302,6 +43303,37 @@ module.exports = (scene, sprite) => {
 		return sprite;
 	};
 
+	MotionBlocks.glideTo = (place, ms) => {
+		let position = generatePosition(place);
+		if(!position) return sprite;
+
+
+
+		sprite.goToXY(position.x, position.y);
+
+		return sprite;
+	};
+
+	MotionBlocks.glideToXY = async (x, y, ms) => {
+		let delta = 0;
+		let startPosition = {x: sprite.x, y: sprite.y};
+		let slope = (startPosition.y - y) / (startPosition.x - x);
+		let startDate = Date.now();
+
+		while(delta < 1) {
+			let xInput = (delta * (x - startPosition.x));
+			sprite.x = (xInput + startPosition.x);
+			sprite.y = (xInput + startPosition.y) * slope;
+
+			delta = Math.min((Date.now() - startDate) / ms, 1);
+			await Utils.wait(scene.elapsedMS);
+		}
+
+		sprite.goToXY(x, y);
+
+		return sprite;
+	};
+
 	return MotionBlocks;
 };
 
@@ -43326,7 +43358,7 @@ function generatePosition(place) {
 
 	return null;
 }
-},{"../Types":62,"pixi.js":52}],58:[function(require,module,exports){
+},{"../Types":62,"../Utils":68,"pixi.js":52}],58:[function(require,module,exports){
 class Costume {
 	constructor(resource) {
 		this.resource = resource;
@@ -43360,11 +43392,11 @@ const Types = require('./Types');
 
 class Scene {
 	constructor(sceneSettings={}) {
-		let settings = {};
+		let pixiSettings = {};
 
-		if(sceneSettings.canvas) settings.view = sceneSettings.canvas;
+		if(sceneSettings.canvas) pixiSettings.view = sceneSettings.canvas;
 
-		this.app = new PIXI.Application(settings);
+		this.app = new PIXI.Application(pixiSettings);
 		this.sprites = {};
 		this.resources = {};
 		this.sceneEvents = new EventEmitter();
@@ -43376,6 +43408,8 @@ class Scene {
 
 		if(!sceneSettings.canvas) document.body.appendChild(this.app.view);
 
+		if(sceneSettings.fps) this.app.ticker.maxFPS = sceneSettings.fps;
+
 		// Tick event emitter
 		this.app.ticker.add(delta => {
 			this.currentDelta = delta;
@@ -43386,6 +43420,8 @@ class Scene {
 
 	get width() {return this.app.renderer.width}
 	get height() {return this.app.renderer.height}
+	get fps() {return this.app.ticker.maxFPS}
+	get elapsedMS() {return this.app.ticker.elapsedMS}
 
 	/**
 	 * Starts the scene. If successful, the function returns true.
@@ -43629,6 +43665,8 @@ Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
 		}
 	}, ms);
 });
+
+Utils.wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 module.exports = Utils;
 },{}],69:[function(require,module,exports){

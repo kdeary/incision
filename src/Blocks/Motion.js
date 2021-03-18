@@ -1,5 +1,6 @@
 const PIXI = require('pixi.js');
 const Types = require('../Types');
+const Utils = require('../Utils');
 
 module.exports = (scene, sprite) => {
 	let MotionBlocks = {};
@@ -26,6 +27,37 @@ module.exports = (scene, sprite) => {
 	MotionBlocks.goToXY = (x, y) => {
 		sprite.x = x;
 		sprite.y = y;
+
+		return sprite;
+	};
+
+	MotionBlocks.glideTo = (place, ms) => {
+		let position = generatePosition(place);
+		if(!position) return sprite;
+
+
+
+		sprite.goToXY(position.x, position.y);
+
+		return sprite;
+	};
+
+	MotionBlocks.glideToXY = async (x, y, ms) => {
+		let delta = 0;
+		let startPosition = {x: sprite.x, y: sprite.y};
+		let slope = (startPosition.y - y) / (startPosition.x - x);
+		let startDate = Date.now();
+
+		while(delta < 1) {
+			let xInput = (delta * (x - startPosition.x));
+			sprite.x = (xInput + startPosition.x);
+			sprite.y = (xInput + startPosition.y) * slope;
+
+			delta = Math.min((Date.now() - startDate) / ms, 1);
+			await Utils.wait(scene.elapsedMS);
+		}
+
+		sprite.goToXY(x, y);
 
 		return sprite;
 	};

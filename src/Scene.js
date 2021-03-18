@@ -6,11 +6,11 @@ const Types = require('./Types');
 
 class Scene {
 	constructor(sceneSettings={}) {
-		let settings = {};
+		let pixiSettings = {};
 
-		if(sceneSettings.canvas) settings.view = sceneSettings.canvas;
+		if(sceneSettings.canvas) pixiSettings.view = sceneSettings.canvas;
 
-		this.app = new PIXI.Application(settings);
+		this.app = new PIXI.Application(pixiSettings);
 		this.sprites = {};
 		this.resources = {};
 		this.sceneEvents = new EventEmitter();
@@ -22,6 +22,8 @@ class Scene {
 
 		if(!sceneSettings.canvas) document.body.appendChild(this.app.view);
 
+		if(sceneSettings.fps) this.app.ticker.maxFPS = sceneSettings.fps;
+
 		// Tick event emitter
 		this.app.ticker.add(delta => {
 			this.currentDelta = delta;
@@ -32,6 +34,8 @@ class Scene {
 
 	get width() {return this.app.renderer.width}
 	get height() {return this.app.renderer.height}
+	get fps() {return this.app.ticker.maxFPS}
+	get elapsedMS() {return this.app.ticker.elapsedMS}
 
 	/**
 	 * Starts the scene. If successful, the function returns true.

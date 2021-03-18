@@ -9,4 +9,6 @@ Utils.waitUntil = (boolFunc, ms=50) => new Promise(resolve => {
 	}, ms);
 });
 
+Utils.wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 module.exports = Utils;

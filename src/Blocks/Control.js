@@ -1,8 +1,14 @@
+const Utils = require('../Utils');
+
 module.exports = (scene, sprite) => {
 	let ControlBlocks = {};
 
 	ControlBlocks.wait = (ms) => {
 		return new Promise(resolve => setTimeout(resolve, ms));
+	};
+
+	ControlBlocks.waitUntil = (func) => {
+		return Utils.waitUntil(func);
 	};
 
 	ControlBlocks.forever = (callback) => {
